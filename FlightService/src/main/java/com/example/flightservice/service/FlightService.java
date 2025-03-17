@@ -29,7 +29,7 @@ public class FlightService {
                 .collect(Collectors.toList());
     }
     public FlightDTO getFlightById(Long id) {
-        Flight flight = flightRepository.findByFlightId(id)
+        Flight flight = flightRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Flight not found with flight id: " + id));
         return convertToDTO(flight);
     }
@@ -56,7 +56,7 @@ public class FlightService {
         flight.setArrivalCity(flightDTO.getArrivalCity());
         flight.setDepartureCity(flightDTO.getDepartureCity());
         flight.setPrice(flightDTO.getPrice());
-        if()
+
         return flight;
     }
 
@@ -80,7 +80,7 @@ public class FlightService {
         flightRepository.deleteById(id);
     }
     public FlightDTO updateFlight(Long id, FlightDTO flightDTO){
-        Flight flight = flightRepository.findByFlightId(id)
+        Flight flight = flightRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Flight not found with flight id: " + id));
         if(!flight.getFlightNumber().equals(flightDTO.getFlightNumber()) && flightRepository.findByFlightNumber(flightDTO.getFlightNumber()).isPresent()){
             throw new DuplicateKeyException("Flight already exists with flight number: " + flightDTO.getFlightNumber());

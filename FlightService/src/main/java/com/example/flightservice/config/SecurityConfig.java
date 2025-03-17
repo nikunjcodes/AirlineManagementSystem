@@ -19,7 +19,7 @@ public class SecurityConfig {
         return httpSecurity.
                 csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/flights/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/flights/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/flights/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/flights/**").hasRole("ADMIN")

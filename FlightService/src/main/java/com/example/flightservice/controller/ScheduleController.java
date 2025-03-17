@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/flight")
+@RequestMapping("/flights")
 @AllArgsConstructor
 public class ScheduleController {
     private final ScheduleService scheduleService;
@@ -32,7 +32,7 @@ public class ScheduleController {
         List<ScheduleDTO> scheduleDTOS = scheduleService.getScheduleByFlightId(flightId , startDate , endDate);
         return ResponseEntity.ok(scheduleDTOS);
     }
-    @GetMapping("/schedules")
+    @GetMapping("/schedules/{id}")
     public ResponseEntity<ScheduleDTO> getScheduleById(@PathVariable Long id ){
         ScheduleDTO scheduleDTO = scheduleService.getScheduleById(id);
         return ResponseEntity.ok(scheduleDTO);

@@ -21,5 +21,6 @@ public class Schedule{
     private Flight flight;
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
+    @Enumerated(EnumType.STRING)
     private FlightStatus flightStatus;
 }

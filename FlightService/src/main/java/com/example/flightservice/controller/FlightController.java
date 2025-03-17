@@ -13,11 +13,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/flights")
 @AllArgsConstructor
+
 public class FlightController {
     private final FlightService flightService;
     @GetMapping
     public ResponseEntity<List<FlightDTO>> getAllFlights(
             @RequestParam(required = false) String sort){
+        if(sort==null)
+            sort = "asc";
         List<FlightDTO> getAllFlights = flightService.getAllFlights(sort);
         return ResponseEntity.ok(getAllFlights);
     }

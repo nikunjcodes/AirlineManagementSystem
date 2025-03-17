@@ -23,7 +23,6 @@ public class ScheduleDTO {
     @NotNull(message = "Arrival time is required")
     @Future(message = "Arrival time should be in future")
     private LocalDateTime arrivalTime;
-
     private FlightStatus flightStatus;
     private FlightDTO flightDTO;
 }
