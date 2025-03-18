@@ -8,9 +8,14 @@ import com.example.ticketservice.model.Ticket;
 import com.example.ticketservice.model.TicketStatus;
 import com.example.ticketservice.repository.TicketRepository;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -18,35 +23,46 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@NoArgsConstructor
 @Service
-@RequiredArgsConstructor
 @EnableAutoConfiguration
 @AllArgsConstructor
-public class TicketServiceImpl implements TicketService{
-
+public class TicketServiceImpl implements TicketService {
+    @Autowired
     private TicketRepository ticketRepository;
+    @Autowired
     private RestTemplate restTemplate;
     @Value("${flight.service.url}")
     private String flightServiceUrl;
     @Value("${user.service.url}")
     private String userServiceUrl;
+
+    private HttpHeaders createHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            String token = (String) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+            if (token != null) {
+                headers.set("Authorization", "Bearer " + token);
+            }
+        }
+        return headers;
+    }
+
     @Override
     @Transactional
     public TicketDTO createTicket(TicketDTO ticketDTO) {
-
         FlightDTO flightDTO = restTemplate.getForObject(
                 flightServiceUrl + "/flights/" + ticketDTO.getFlightId(),
                 FlightDTO.class
         );
-        if(flightDTO == null){
+        if (flightDTO == null) {
             throw new IllegalArgumentException("Flight not found");
         }
         ScheduleDTO scheduleDTO = restTemplate.getForObject(
-                flightServiceUrl+"/flights/schedules/"+ticketDTO.getScheduleId(),
+                flightServiceUrl + "/flights/schedules/" + ticketDTO.getScheduleId(),
                 ScheduleDTO.class
         );
-        if(scheduleDTO==null)
+        if (scheduleDTO == null)
             throw new IllegalArgumentException("Schedule not found");
 
         Ticket ticket = new Ticket();
@@ -60,13 +76,12 @@ public class TicketServiceImpl implements TicketService{
         ticket.setLastUpdated(LocalDateTime.now());
         ticket = ticketRepository.save(ticket);
         return enrichTicketDTO(convertToDTO(ticket));
-
     }
 
     @Override
     public TicketDTO getTicketById(Long id) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("Ticket not found for "));
+                .orElseThrow(() -> new IllegalArgumentException("Ticket not found"));
         return enrichTicketDTO(convertToDTO(ticket));
     }
 
@@ -82,10 +97,9 @@ public class TicketServiceImpl implements TicketService{
     @Transactional
     public void cancelTicket(Long id) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("Ticket not found"));
-        if(ticket.getStatus()==TicketStatus.CANCELLED){
+                .orElseThrow(() -> new IllegalArgumentException("Ticket not found"));
+        if (ticket.getStatus() == TicketStatus.CANCELLED) {
             throw new IllegalArgumentException("Ticket is already cancelled");
-
         }
         ticket.setStatus(TicketStatus.CANCELLED);
         ticket.setLastUpdated(LocalDateTime.now());
@@ -99,7 +113,8 @@ public class TicketServiceImpl implements TicketService{
                 .map(this::enrichTicketDTO)
                 .collect(Collectors.toList());
     }
-    private TicketDTO convertToDTO(Ticket ticket){
+
+    private TicketDTO convertToDTO(Ticket ticket) {
         TicketDTO ticketDTO = new TicketDTO();
         ticketDTO.setId(ticket.getId());
         ticketDTO.setUserId(ticket.getUserId());
@@ -112,23 +127,37 @@ public class TicketServiceImpl implements TicketService{
         ticketDTO.setLastUpdated(ticket.getLastUpdated());
         return ticketDTO;
     }
-    private TicketDTO enrichTicketDTO(TicketDTO ticketDTO){
-        try{
+
+    private TicketDTO enrichTicketDTO(TicketDTO ticketDTO) {
+        try {
+            // Flight service calls (no JWT needed)
             ticketDTO.setFlight(restTemplate.getForObject(
-                    flightServiceUrl+"/flights/"+ticketDTO.getFlightId(),
+                    flightServiceUrl + "/flights/" + ticketDTO.getFlightId(),
                     FlightDTO.class
             ));
             ticketDTO.setSchedule(restTemplate.getForObject(
-                    flightServiceUrl+"flights/schedules/"+ticketDTO.getScheduleId(),
+                    flightServiceUrl + "/flights/schedules/" + ticketDTO.getScheduleId(),
                     ScheduleDTO.class
             ));
-            ticketDTO.setUser(restTemplate.getForObject(
-                    userServiceUrl+"/users/"+ticketDTO.getUserId(),
-                    UserDTO.class
-            ));
-        }
-        catch (Exception e){
-            System.err.println("Error while enriching ticket DTO \n "+e.getMessage());
+
+            // User service call (with JWT)
+            HttpHeaders headers = createHeaders();
+            HttpEntity<?> entity = new HttpEntity<>(headers);
+            try {
+                UserDTO userDTO = restTemplate.exchange(
+                        userServiceUrl + "/api/users/" + ticketDTO.getUserId(),
+                        HttpMethod.GET,
+                        entity,
+                        UserDTO.class
+                ).getBody();
+                ticketDTO.setUser(userDTO);
+            } catch (Exception e) {
+                System.err.println("Error fetching user data: " + e.getMessage());
+                // Continue even if user data fetch fails
+            }
+        } catch (Exception e) {
+            System.err.println("Error while enriching ticket DTO: " + e.getMessage());
+            e.printStackTrace();
         }
         return ticketDTO;
     }

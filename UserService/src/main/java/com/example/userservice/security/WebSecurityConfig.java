@@ -19,7 +19,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -50,10 +49,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://smal-link.vercel.app",
-                "https://url-shortner-36kn.onrender.com"
-        ));
+        configuration.setAllowedOrigins(Arrays.asList("*")); // Allow all origins for now
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
@@ -82,8 +78,9 @@ public class WebSecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/public/**").permitAll()
-                        .requestMatchers("/api/urls/public/**").permitAll()
-                        .requestMatchers("/{shortUrl}").permitAll()
+                        .requestMatchers("/api/users/public/**").permitAll()
+                        .requestMatchers("/api/users/username/**").permitAll()
+                        .requestMatchers("/api/users/**").permitAll()// Allow username lookup
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(req -> req.getMethod().equals("OPTIONS")).permitAll()
                         .anyRequest().authenticated()

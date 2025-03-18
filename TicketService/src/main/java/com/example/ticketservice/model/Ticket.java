@@ -26,8 +26,3 @@ public class Ticket {
     private LocalDateTime bookingTime;
     private LocalDateTime lastUpdated;
 }
-public enum TicketStatus{
-    BOOKED,
-    CANCELLED,
-    COMPLETED
-}

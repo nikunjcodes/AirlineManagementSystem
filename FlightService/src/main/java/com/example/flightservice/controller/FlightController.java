@@ -27,6 +27,7 @@ public class FlightController {
     @GetMapping("/{id}")
     public ResponseEntity<FlightDTO> getFlightById(@PathVariable Long id){
         FlightDTO flightDTO = flightService.getFlightById(id);
+
         return ResponseEntity.ok(flightDTO);
     }
     @PreAuthorize("hasRole('ADMIN')")
