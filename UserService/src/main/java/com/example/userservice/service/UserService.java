@@ -49,21 +49,30 @@ public class UserService {
         this.jwtUtils = jwtUtils;
     }
 
-    public JwtAuthenticationResponse authenticateUser(LoginRequest loginRequest){
+    public JwtAuthenticationResponse authenticateUser(LoginRequest loginRequest) {
         try {
-            System.out.println("Login request"+ loginRequest.getUsername() + loginRequest.getPassword());
+            System.out.println("🔹 Authenticating user: " + loginRequest.getUsername());
+
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+            );
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+            System.out.println("✅ Authentication successful for: " + userDetails.getUsername());
+
+            // Generate JWT Token
             String jwt = jwtUtils.generateToken(userDetails);
-            System.out.println(jwt);
+            System.out.println("🟢 Generated JWT: " + jwt);
+
             return new JwtAuthenticationResponse(jwt);
         } catch (Exception e) {
-            throw new RuntimeException("Authentication failed: " + e.getMessage());
+            System.err.println("❌ Authentication failed: " + e.getMessage());
+            throw new RuntimeException("Invalid credentials. Please check username and password.");
         }
-
     }
+
     public User findByUserName(String name){
         return userRepository.findByUsername(name)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found with username: "+name));

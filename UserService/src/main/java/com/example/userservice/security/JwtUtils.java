@@ -27,15 +27,23 @@ public class JwtUtils {
     }
     public String generateToken(UserDetailsImpl userDetails){
         String username = userDetails.getUsername();
-        String roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
-        return Jwts.builder()
+        String roles = userDetails.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        System.out.println("🔹 Generating JWT for: " + username + " with roles: " + roles);
+
+        String token = Jwts.builder()
                 .setSubject(username)
-                .claim("roles" , roles)
+                .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date().getTime() + jwtExpirationMs)))
-                .signWith(key())
+                .signWith(key())  // Ensure this method is working correctly
                 .compact();
 
+        System.out.println("🟢 Token: " + token);
+        return token;
     }
     public String getUserNameFromJwtToken(String token){
         return Jwts.parser()
