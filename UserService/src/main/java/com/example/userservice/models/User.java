@@ -16,3 +16,4 @@ public class User {
     private String role = "ROLE_USER";
 
 }
+
