@@ -27,7 +27,6 @@ public class TicketController {
     @PostMapping
     public ResponseEntity<ApiResponse<TicketDTO>> createTicket(@Valid @RequestBody TicketDTO ticketDTO) {
         try {
-            // Set the authenticated user's ID
             ticketDTO.setUserId(getCurrentUserId());
             TicketDTO createdTicket = ticketService.createTicket(ticketDTO);
             return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Ticket created successfully", createdTicket));
