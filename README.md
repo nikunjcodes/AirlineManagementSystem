@@ -41,7 +41,7 @@ A full-stack airline management system built with Spring Boot microservices and 
 1. Clone the repository:
 ```bash
 git clone https://github.com/nikunjcodes/AirlineManagementSystem.git
-cd airline-management
+cd AirlineManagementSystem
 ```
 
 2. Set up the database:
